@@ -28,8 +28,30 @@ async function run() {
 
         const collegesCollection = client.db('eduStayDB').collection('colleges')
 
+        // const indexKeys = { name: 1 }
+        // const indexOptions = { name: 'collegTitle' }
+        // const result = await collegesCollection.createIndex(indexKeys, indexOptions)
+
+
         app.get('/colleges', async (req, res) => {
             const result = await collegesCollection.find().sort({ rating: -1 }).toArray()
+            res.send(result)
+        })
+
+        app.get('/colleges/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: parseInt(id) }
+            const result = await collegesCollection.findOne(query)
+            res.send(result)
+        })
+
+        app.get('/college-search/:text', async (req, res) => {
+            const searchText = req.params.text
+            const result = await collegesCollection.find({
+                $or: [
+                    { collegeName: { $regex: searchText, $options: "i" } }
+                ],
+            }).toArray()
             res.send(result)
         })
 
