@@ -105,7 +105,8 @@ async function run() {
         })
 
         app.get('/all-review', async (req, res) => {
-            const result = await ratingCollection.find().toArray()
+            const cursor = ratingCollection.find().sort({ createdAt: -1 }).limit(20)
+            const result = await cursor.toArray()
             res.send(result)
         })
 
