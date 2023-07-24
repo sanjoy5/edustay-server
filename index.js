@@ -97,8 +97,8 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/my-college/:email', async (req, res) => {
-            const email = req.params.email;
+        app.get('/my-college', async (req, res) => {
+            const email = req.query.email;
             // const query = {email:email}
             const result = await admissionCollection.findOne({ email: email })
             res.send(result)
