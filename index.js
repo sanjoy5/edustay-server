@@ -27,6 +27,7 @@ async function run() {
         // await client.connect();
 
         const collegesCollection = client.db('eduStayDB').collection('colleges')
+        const admissionCollection = client.db('eduStayDB').collection('admission')
 
         // const indexKeys = { name: 1 }
         // const indexOptions = { name: 'collegTitle' }
@@ -52,6 +53,19 @@ async function run() {
                     { collegeName: { $regex: searchText, $options: "i" } }
                 ],
             }).toArray()
+            res.send(result)
+        })
+
+        app.post('/my-college', async (req, res) => {
+            const college = req.body
+            const result = await admissionCollection.insertOne(college)
+            res.send(result)
+        })
+
+        app.get('/my-college', async (req, res) => {
+            const email = req.query.email;
+            // const query = {email:email}
+            const result = await admissionCollection.findOne({ email: email })
             res.send(result)
         })
 
