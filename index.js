@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const app = express()
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000
 require('dotenv').config()
 
@@ -26,12 +26,46 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         // await client.connect();
 
+        const usersCollection = client.db('eduStayDB').collection('users')
         const collegesCollection = client.db('eduStayDB').collection('colleges')
         const admissionCollection = client.db('eduStayDB').collection('admission')
+        const ratingCollection = client.db('eduStayDB').collection('rating')
 
         // const indexKeys = { name: 1 }
         // const indexOptions = { name: 'collegTitle' }
         // const result = await collegesCollection.createIndex(indexKeys, indexOptions)
+
+
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            const query = { email: user.email }
+            const existsUser = await usersCollection.findOne(query)
+            if (existsUser) {
+                return res.send({ message: 'user alerady exists' })
+            }
+            const result = await usersCollection.insertOne(user)
+            res.send(result)
+        })
+
+        app.get('/user/:email', async (req, res) => {
+            const email = req.params.email
+            const query = { email: email }
+            const result = await usersCollection.findOne(query)
+            res.send(result)
+        })
+        app.put('/user-update/:id', async (req, res) => {
+            const id = req.params.id
+            const body = req.body
+            const query = { _id: new ObjectId(id) }
+            const updateDoc = {
+                $set: {
+                    name: body.name,
+                    photo: body.photo
+                }
+            }
+            const result = await usersCollection.updateOne(query, updateDoc)
+            res.send(result)
+        })
 
 
         app.get('/colleges', async (req, res) => {
@@ -45,6 +79,7 @@ async function run() {
             const result = await collegesCollection.findOne(query)
             res.send(result)
         })
+
 
         app.get('/college-search/:text', async (req, res) => {
             const searchText = req.params.text
@@ -62,12 +97,48 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/my-college', async (req, res) => {
-            const email = req.query.email;
+        app.get('/my-college/:email', async (req, res) => {
+            const email = req.params.email;
             // const query = {email:email}
             const result = await admissionCollection.findOne({ email: email })
             res.send(result)
         })
+
+        app.get('/all-review', async (req, res) => {
+            const result = await ratingCollection.find().toArray()
+            res.send(result)
+        })
+
+
+
+        app.post('/review-college', async (req, res) => {
+            const userReview = req.body
+            userReview.createdAt = new Date()
+            const insertResult = await ratingCollection.insertOne(userReview)
+
+            // const reviews = await ratingCollection.find({ college: userReview.college }).toArray();
+            // console.log(reviews, 'reviews');
+            // const numofreview = reviews.length;
+            // console.log(numofreview, 'number of reviews');
+
+            // const totalRating = reviews.reduce((acc, review) => acc + Number(review.rating), 0);
+            // console.log('totalRating : ', totalRating);
+            // const rating = totalRating / numofreview;
+            // console.log('averageRating: ', rating);
+
+            // const updateResult = await collegesCollection.updateOne(
+            //     { _id: userReview.college },
+            //     {
+            //         $et: {
+            //             numofreview,
+            //             rating: rating.toFixed(2),
+            //         }
+            //     }
+            // )
+            // res.send({ insertResult, updateResult })
+            res.send(insertResult)
+        })
+
 
 
         // Send a ping to confirm a successful connection
